@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Medical Chatbot</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="title">Medical Chatbot</div>
+        <div class="box" id="chatBox">
+            <div class="item">
+                <div class="icon">
+                    <i class="fa fa-user"></i>
+                </div>
+                <div class="msg">
+                    <p>Hello! How can I assist you today?</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-area">
+            <div class="input-field">
+                <input type="text" id="userInput" placeholder="Type your message" required>
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var userInput = document.getElementById('userInput');
+            var message = userInput.value.trim();
+            
+            if (message !== '') {
+                // Add user message to chat
+                addMessageToChat('user', message);
+                
+                // Clear input field
+                userInput.value = '';
+                
+                // Send message to server
+                fetch('/get', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'msg=' + encodeURIComponent(message)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Received data:", data);
+                    if (data.response) {
+                        addMessageToChat('bot', data.response);
+                    } else {
+                        throw new Error('Response does not contain expected data');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    addMessageToChat('bot', 'Sorry, an error occurred: ' + error.message);
+                });
+            }
+        }
+
+        function addMessageToChat(sender, message) {
+            var chatBox = document.getElementById('chatBox');
+            var messageDiv = document.createElement('div');
+            messageDiv.className = sender === 'user' ? 'item right' : 'item';
+            
+            var innerHtml = sender === 'user' ? 
+                '<div class="msg"><p>' + message + '</p></div>' :
+                '<div class="icon"><i class="fa fa-user"></i></div><div class="msg"><p>' + message + '</p></div>';
+            
+            messageDiv.innerHTML = innerHtml;
+            chatBox.appendChild(messageDiv);
+            
+            // Scroll to bottom of chat
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Allow sending message with Enter key
+        document.getElementById('userInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
