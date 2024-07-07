@@ -1,6 +1,8 @@
-ctransformers==0.2.5
+ctransformers
 sentence-transformers
 pinecone-client
-langchain==0.0.225
+langchain
 flask
 pypdf
+
+-e .
